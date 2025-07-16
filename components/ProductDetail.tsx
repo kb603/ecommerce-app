@@ -1,13 +1,30 @@
+"use client";
+
 import Image from "next/image";
 import Stripe from "stripe";
 import { Button } from "./ui/button";
+import { useCartStore } from "@/store/cartStore";
 
 interface Props {
   product: Stripe.Product;
 }
 
 export default function ProductDetail({ product }: Props) {
+  const { items, addItem, removeItem } = useCartStore();
   const price = product.default_price as Stripe.Price;
+  const cartItem = items.find((item) => item.id === product.id);
+  const quantity = cartItem ? cartItem.quantity : 0;
+
+  const onAddItem = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: price.unit_amount as number,
+      imageUrl: product.images ? product.images[0] : null,
+      quantity: 1,
+    });
+  };
+
   return (
     <div>
       {product.images && product.images[0] && (
@@ -31,9 +48,11 @@ export default function ProductDetail({ product }: Props) {
           </p>
         )}
         <div className="flex items-center space-x-4">
-          <Button variant="outline"> - </Button>
-          <span>0</span>
-          <Button variant="outline"> + </Button>
+          <Button onClick={() => removeItem(product.id)} variant="outline">
+            -
+          </Button>
+          <span className="text-lg font-semibold">{quantity}</span>
+          <Button onClick={onAddItem}> + </Button>
         </div>
       </div>
     </div>
